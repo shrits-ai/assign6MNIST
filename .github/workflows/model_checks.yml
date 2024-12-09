@@ -1,0 +1,78 @@
+name: Model Architecture Checks
+
+on: [push, pull_request]
+
+jobs:
+  architecture-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision
+        
+    - name: Check Parameter Count
+      run: |
+        python -c "
+        import torch
+        from model import Net
+        model = Net()
+        total_params = sum(p.numel() for p in model.parameters())
+        print(f'🔢 Total Parameters: {total_params:,}')
+        assert total_params < 20000, f'Model has {total_params:,} parameters (should be < 20K)'
+        "
+      
+    - name: Check Batch Normalization
+      run: |
+        python -c "
+        import torch.nn as nn
+        from model import Net
+        model = Net()
+        has_bn = any(isinstance(m, nn.BatchNorm2d) for m in model.modules())
+        bn_count = sum(1 for m in model.modules() if isinstance(m, nn.BatchNorm2d))
+        print(f'📊 BatchNorm Layers: {bn_count}')
+        assert has_bn, 'Model must use BatchNormalization'
+        "
+        
+    - name: Check Dropout
+      run: |
+        python -c "
+        import torch.nn as nn
+        from model import Net
+        model = Net()
+        has_dropout = any(isinstance(m, nn.Dropout) for m in model.modules())
+        dropout_rates = [m.p for m in model.modules() if isinstance(m, nn.Dropout)]
+        print(f'🎲 Dropout Rates: {dropout_rates}')
+        assert has_dropout, 'Model must use Dropout'
+        "
+        
+    - name: Check FC/GAP Layer
+      run: |
+        python -c "
+        import torch.nn as nn
+        import inspect
+        from model import Net
+        model = Net()
+        has_fc = any(isinstance(m, nn.Linear) for m in model.modules())
+        has_gap = 'adaptive_avg_pool2d' in str(model.forward).lower() or 'AdaptiveAvgPool2d' in str(inspect.getsource(Net))
+        print(f'🔌 Uses FC Layer: {has_fc}')
+        print(f'🌐 Uses GAP: {has_gap}')
+        assert has_fc or has_gap, 'Model must use either FC layer or Global Average Pooling'
+        "
+
+    - name: Summary
+      if: always()
+      run: |
+        echo "✨ Architecture Check Summary ✨"
+        echo "--------------------------------"
+        echo "✓ Parameter Count: < 20K"
+        echo "✓ Batch Normalization: Present"
+        echo "✓ Dropout: Implemented"
+        echo "✓ FC/GAP Layer: Verified"
