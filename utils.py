@@ -12,6 +12,8 @@ def get_data_loaders(batch_size=128):
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=True, download=True,
                       transform=transforms.Compose([
+                          transforms.RandomRotation((-7.0, 7.0)),
+                          transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
                           transforms.ToTensor(),
                           transforms.Normalize((0.1307,), (0.3081,))
                       ])),
@@ -20,6 +22,8 @@ def get_data_loaders(batch_size=128):
     test_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=False,
                       transform=transforms.Compose([
+                          transforms.RandomRotation((-7.0, 7.0)),
+                          transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
                           transforms.ToTensor(),
                           transforms.Normalize((0.1307,), (0.3081,))
                       ])),
