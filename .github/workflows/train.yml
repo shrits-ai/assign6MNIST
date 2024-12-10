@@ -19,14 +19,40 @@ jobs:
         python -m pip install --upgrade pip
         pip install torch torchvision torchsummary
         
-    - name: Run Model Pipeline
-      id: pipeline
+    - name: Run Architecture Tests
+      id: arch_test
       run: |
         echo "Running Model Architecture Tests..."
+        echo "1. Testing Layer Dimensions..."
+        echo "2. Testing Output Properties..."
+        echo "3. Testing Parameter Count..."
+        echo "4. Testing BatchNorm Configuration..."
+        echo "5. Testing Dropout Implementation..."
+        echo "6. Testing Forward/Backward Pass..."
         python test_model.py
-        
-        echo "\nStarting Model Training..."
+        if [ $? -eq 0 ]; then
+          echo "arch_status=success" >> $GITHUB_OUTPUT
+          echo "✅ All architecture tests passed!"
+        else
+          echo "arch_status=failure" >> $GITHUB_OUTPUT
+          echo "❌ Architecture tests failed!"
+          exit 1
+        fi
+
+    - name: Run Training Pipeline
+      id: training
+      if: steps.arch_test.outputs.arch_status == 'success'
+      run: |
+        echo "Architecture tests passed. Starting model training..."
         python train.py
+        if [ $? -eq 0 ]; then
+          echo "train_status=success" >> $GITHUB_OUTPUT
+          echo "✅ Training completed successfully!"
+        else
+          echo "train_status=failure" >> $GITHUB_OUTPUT
+          echo "❌ Training failed!"
+          exit 1
+        fi
         
     - name: Upload training logs
       if: always()
@@ -37,7 +63,7 @@ jobs:
         retention-days: 90
         
     - name: Upload best model
-      if: success()
+      if: steps.training.outputs.train_status == 'success'
       uses: actions/upload-artifact@v4
       with:
         name: best-model
@@ -47,7 +73,7 @@ jobs:
     - name: Update README badge
       if: always()
       run: |
-        if [ $? -eq 0 ]; then
+        if [ "${{ steps.arch_test.outputs.arch_status }}" == "success" ] && [ "${{ steps.training.outputs.train_status }}" == "success" ]; then
           sed -i 's/ML%20Pipeline-.*-success/ML%20Pipeline-Active-success/' README.md
         else
           sed -i 's/ML%20Pipeline-.*-success/ML%20Pipeline-Failed-red/' README.md
@@ -56,4 +82,19 @@ jobs:
         git config --local user.name "GitHub Action"
         git add README.md
         git commit -m "Update ML Pipeline badge status" || echo "No changes to commit"
-        git push || echo "No changes to push" 
+        git push || echo "No changes to push"
+
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "Test Results Summary:"
+        echo "===================="
+        echo "Architecture Tests: ${{ steps.arch_test.outputs.arch_status }}"
+        echo "Training Pipeline: ${{ steps.training.outputs.train_status }}"
+        if [ "${{ steps.arch_test.outputs.arch_status }}" != "success" ]; then
+          echo "❌ Architecture tests failed. Check logs for details."
+        elif [ "${{ steps.training.outputs.train_status }}" != "success" ]; then
+          echo "❌ Training failed. Check logs for details."
+        else
+          echo "✅ All tests passed successfully!"
+        fi
