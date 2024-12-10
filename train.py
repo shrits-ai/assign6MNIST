@@ -13,6 +13,7 @@ logger = setup_logger()
 EPOCHS = 20  # Moved epochs definition to top
 LEARNING_RATE = 0.05
 BATCH_SIZE = 64
+TARGET_ACCURACY = 99.50  # Changed target accuracy to 99.50%
 
 def train(model, device, train_loader, optimizer, epoch, criterion):
     model.train()
@@ -111,7 +112,7 @@ def main():
     # Training loop
     logger.info("\nStarting training...")
     best_acc = 0.0
-    target_acc = 99.40  # Define target accuracy
+    best_epoch = 0  # Add this to track epoch with best accuracy
     patience = 5
     no_improve_count = 0
     
@@ -149,16 +150,12 @@ def main():
         
         if test_acc > best_acc:
             best_acc = test_acc
+            best_epoch = epoch  # Track the epoch with best accuracy
             no_improve_count = 0
             torch.save(model.state_dict(), 'best_model.pth')
-            logger.info(f"New best accuracy: {best_acc:.2f}%")
+            logger.info(f"New best accuracy: {best_acc:.2f}% at epoch {best_epoch}")
         else:
             no_improve_count += 1
-        
-        # Stop if we reach target accuracy
-        if test_acc >= target_acc:
-            logger.info(f"\nReached target accuracy of {target_acc}% at epoch {epoch}")
-            break
             
         # Early stopping check
         if no_improve_count >= patience:
@@ -167,7 +164,7 @@ def main():
     
     total_time = time.time() - start_time
     logger.info(f"\nTraining completed in {total_time/60:.2f} minutes")
-    logger.info(f"Best Test Accuracy: {best_acc:.2f}%")
+    logger.info(f"Best Test Accuracy: {best_acc:.2f}% achieved at epoch {best_epoch}")
 
 if __name__ == '__main__':
     main() 

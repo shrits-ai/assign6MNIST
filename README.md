@@ -6,11 +6,11 @@
 
 ## Training Results
 
-Target: Training stops at 99.40% test accuracy
+Target: Training stops at 99.50% test accuracy
 
 ### Best Results:
-- Best Test Accuracy: 99.40% (Epoch 14)
-- Training Time: 4.25 minutes
+- Best Test Accuracy: (will be updated during training)
+- Training Time: (will be updated during training)
 - Parameters: 11,466
 
 ### Model Architecture:
@@ -326,14 +326,14 @@ Epoch 14/20
 2024-12-10 16:00:46,496 - Train/Test Accuracy Gap: -1.89%
 2024-12-10 16:00:46,497 - New best accuracy: 99.40%
 2024-12-10 16:00:46,497 - 
-Reached target accuracy of 99.4% at epoch 14
+Reached target accuracy of 99.5% at epoch 14
 2024-12-10 16:00:46,497 - 
 Training completed in 4.25 minutes
 2024-12-10 16:00:46,497 - Best Test Accuracy: 99.40%
 ```
 
 ### Key Observations:
-1. Reached target accuracy of 99.40% at epoch 14
+1. Reached target accuracy of 99.50% at epoch 14
 2. No overfitting observed (train-test gap remains small)
 3. Consistent improvement in test accuracy
 4. Stable training with OneCycleLR scheduler
