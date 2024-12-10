@@ -3,6 +3,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
+import logging
+import os
+
+# Set up logging
+def setup_logger():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(message)s',
+        handlers=[
+            logging.FileHandler('training.log'),
+            logging.StreamHandler()
+        ]
+    )
+    return logging.getLogger(__name__)
 
 # Set random seed for reproducibility
 torch.manual_seed(1)
