@@ -8,4 +8,3 @@
 [![BatchNorm](https://img.shields.io/badge/Batch%20Normalization-Yes-success)](https://github.com/shrits-ai/assign6MNIST)
 [![Dropout](https://img.shields.io/badge/Dropout-0.03-informational)](https://github.com/shrits-ai/assign6MNIST)
 [![Architecture](https://img.shields.io/badge/Final%20Layer-FC-yellow)](https://github.com/shrits-ai/assign6MNIST)
-[![Dataset Split](https://img.shields.io/badge/Split-50K%2F10K-blue)](https://github.com/shrits-ai/assign6MNIST)

@@ -5,6 +5,10 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, Subset
 import logging
 import os
+import ssl
+
+# Disable SSL verification
+ssl._create_default_https_context = ssl._create_unverified_context
 
 # Set up logging
 def setup_logger():
