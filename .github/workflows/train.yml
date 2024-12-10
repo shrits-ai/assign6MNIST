@@ -19,31 +19,118 @@ jobs:
         python -m pip install --upgrade pip
         pip install torch torchvision torchsummary
         
-    - name: Run Architecture Tests
-      id: arch_test
+    - name: Layer Dimension Tests
+      id: dimension_test
       run: |
-        echo "Running Model Architecture Tests..."
-        echo "1. Testing Layer Dimensions..."
-        echo "2. Testing Output Properties..."
-        echo "3. Testing Parameter Count..."
-        echo "4. Testing BatchNorm Configuration..."
-        echo "5. Testing Dropout Implementation..."
-        echo "6. Testing Forward/Backward Pass..."
-        python test_model.py
+        echo "Running Layer Dimension Tests..."
+        python -c "
+        import torch
+        from utils import Net
+        device = torch.device('cpu')
+        model = Net().to(device)
+        test_input = torch.randn(1, 1, 28, 28)
+        x = model.conv1(test_input)
+        assert x.shape == (1, 8, 28, 28)
+        x = model.bn1(x)
+        x = model.pool1(x)
+        assert x.shape == (1, 8, 14, 14)
+        x = model.conv2(x)
+        x = model.bn2(x)
+        assert x.shape == (1, 16, 14, 14)
+        x = model.conv3(x)
+        x = model.pool2(x)
+        assert x.shape == (1, 16, 7, 7)
+        print('✅ Layer dimension tests passed!')"
         if [ $? -eq 0 ]; then
-          echo "arch_status=success" >> $GITHUB_OUTPUT
-          echo "✅ All architecture tests passed!"
+          echo "dimension_status=success" >> $GITHUB_OUTPUT
         else
-          echo "arch_status=failure" >> $GITHUB_OUTPUT
-          echo "❌ Architecture tests failed!"
+          echo "dimension_status=failure" >> $GITHUB_OUTPUT
           exit 1
         fi
 
-    - name: Run Training Pipeline
-      id: training
-      if: steps.arch_test.outputs.arch_status == 'success'
+    - name: Output Properties Tests
+      id: output_test
+      if: success()
       run: |
-        echo "Architecture tests passed. Starting model training..."
+        echo "Running Output Properties Tests..."
+        python -c "
+        import torch
+        from utils import Net
+        model = Net()
+        output = model(torch.randn(32, 1, 28, 28))
+        assert output.shape == (32, 10)
+        assert torch.allclose(torch.sum(torch.exp(output), dim=1), torch.ones(32), atol=1e-6)
+        print('✅ Output properties tests passed!')"
+        if [ $? -eq 0 ]; then
+          echo "output_status=success" >> $GITHUB_OUTPUT
+        else
+          echo "output_status=failure" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+    - name: Parameter Count Test
+      id: param_test
+      if: success()
+      run: |
+        echo "Running Parameter Count Test..."
+        python -c "
+        from utils import Net
+        model = Net()
+        total_params = sum(p.numel() for p in model.parameters())
+        assert total_params < 20000, f'Too many parameters: {total_params}'
+        print(f'✅ Parameter count test passed! Total parameters: {total_params}')"
+        if [ $? -eq 0 ]; then
+          echo "param_status=success" >> $GITHUB_OUTPUT
+        else
+          echo "param_status=failure" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+    - name: BatchNorm Configuration Test
+      id: bn_test
+      if: success()
+      run: |
+        echo "Running BatchNorm Configuration Test..."
+        python -c "
+        from utils import Net
+        model = Net()
+        assert model.bn1.momentum == 0.1
+        assert model.bn1.eps == 1e-5
+        print('✅ BatchNorm configuration test passed!')"
+        if [ $? -eq 0 ]; then
+          echo "bn_status=success" >> $GITHUB_OUTPUT
+        else
+          echo "bn_status=failure" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+    - name: Dropout Implementation Test
+      id: dropout_test
+      if: success()
+      run: |
+        echo "Running Dropout Implementation Test..."
+        python -c "
+        import torch
+        from utils import Net
+        model = Net()
+        model.train()
+        input = torch.randn(10, 1, 28, 28)
+        out1 = model(input)
+        out2 = model(input)
+        assert not torch.equal(out1, out2)
+        print('✅ Dropout implementation test passed!')"
+        if [ $? -eq 0 ]; then
+          echo "dropout_status=success" >> $GITHUB_OUTPUT
+        else
+          echo "dropout_status=failure" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+    - name: Training Pipeline Test
+      id: training
+      if: success()
+      run: |
+        echo "All architecture tests passed. Starting model training..."
         python train.py
         if [ $? -eq 0 ]; then
           echo "train_status=success" >> $GITHUB_OUTPUT
@@ -70,31 +157,26 @@ jobs:
         path: best_model.pth
         retention-days: 90
 
-    - name: Update README badge
-      if: always()
-      run: |
-        if [ "${{ steps.arch_test.outputs.arch_status }}" == "success" ] && [ "${{ steps.training.outputs.train_status }}" == "success" ]; then
-          sed -i 's/ML%20Pipeline-.*-success/ML%20Pipeline-Active-success/' README.md
-        else
-          sed -i 's/ML%20Pipeline-.*-success/ML%20Pipeline-Failed-red/' README.md
-        fi
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add README.md
-        git commit -m "Update ML Pipeline badge status" || echo "No changes to commit"
-        git push || echo "No changes to push"
-
     - name: Test Summary
       if: always()
       run: |
         echo "Test Results Summary:"
         echo "===================="
-        echo "Architecture Tests: ${{ steps.arch_test.outputs.arch_status }}"
+        echo "Layer Dimensions: ${{ steps.dimension_test.outputs.dimension_status }}"
+        echo "Output Properties: ${{ steps.output_test.outputs.output_status }}"
+        echo "Parameter Count: ${{ steps.param_test.outputs.param_status }}"
+        echo "BatchNorm Config: ${{ steps.bn_test.outputs.bn_status }}"
+        echo "Dropout Implementation: ${{ steps.dropout_test.outputs.dropout_status }}"
         echo "Training Pipeline: ${{ steps.training.outputs.train_status }}"
-        if [ "${{ steps.arch_test.outputs.arch_status }}" != "success" ]; then
-          echo "❌ Architecture tests failed. Check logs for details."
-        elif [ "${{ steps.training.outputs.train_status }}" != "success" ]; then
-          echo "❌ Training failed. Check logs for details."
+        
+        if [ "${{ steps.dimension_test.outputs.dimension_status }}" != "success" ] || \
+           [ "${{ steps.output_test.outputs.output_status }}" != "success" ] || \
+           [ "${{ steps.param_test.outputs.param_status }}" != "success" ] || \
+           [ "${{ steps.bn_test.outputs.bn_status }}" != "success" ] || \
+           [ "${{ steps.dropout_test.outputs.dropout_status }}" != "success" ] || \
+           [ "${{ steps.training.outputs.train_status }}" != "success" ]; then
+          echo "❌ Some tests failed. Check details above."
+          exit 1
         else
           echo "✅ All tests passed successfully!"
         fi

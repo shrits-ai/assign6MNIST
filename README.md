@@ -66,20 +66,34 @@
 
 ### Results by Epoch (Formatted):
 ```
-Epoch 1:  Train Acc: 88.92% | Test Acc: 97.98% | Train Loss: 0.3468 | Test Loss: 0.0010
-Epoch 2:  Train Acc: 95.50% | Test Acc: 98.52% | Train Loss: 0.1440 | Test Loss: 0.0007
-Epoch 3:  Train Acc: 96.29% | Test Acc: 98.61% | Train Loss: 0.1208 | Test Loss: 0.0006
-Epoch 4:  Train Acc: 96.75% | Test Acc: 98.88% | Train Loss: 0.1067 | Test Loss: 0.0005
-Epoch 5:  Train Acc: 96.87% | Test Acc: 99.02% | Train Loss: 0.0986 | Test Loss: 0.0005
-Epoch 6:  Train Acc: 96.85% | Test Acc: 98.96% | Train Loss: 0.0989 | Test Loss: 0.0005
-Epoch 7:  Train Acc: 97.19% | Test Acc: 99.01% | Train Loss: 0.0897 | Test Loss: 0.0005
-Epoch 8:  Train Acc: 97.17% | Test Acc: 99.04% | Train Loss: 0.0901 | Test Loss: 0.0005
-Epoch 9:  Train Acc: 97.37% | Test Acc: 99.07% | Train Loss: 0.0852 | Test Loss: 0.0004
-Epoch 10: Train Acc: 97.43% | Test Acc: 99.21% | Train Loss: 0.0836 | Test Loss: 0.0004
-Epoch 11: Train Acc: 97.49% | Test Acc: 99.10% | Train Loss: 0.0814 | Test Loss: 0.0004
-Epoch 12: Train Acc: 97.55% | Test Acc: 99.21% | Train Loss: 0.0772 | Test Loss: 0.0004
-Epoch 13: Train Acc: 97.51% | Test Acc: 99.14% | Train Loss: 0.0796 | Test Loss: 0.0004
-Epoch 14: Train Acc: 97.52% | Test Acc: 99.40% | Train Loss: 0.0786 | Test Loss: 0.0004
+2024-12-10 16:30:27,930 - Training Epoch 1: Average loss: 0.3468, Accuracy: 88.92%
+2024-12-10 16:30:28,752 - Test set: Average loss: 0.0010, Accuracy: 9798/10000 (97.98%)
+2024-12-10 16:30:45,682 - Training Epoch 2: Average loss: 0.1440, Accuracy: 95.50%
+2024-12-10 16:30:46,508 - Test set: Average loss: 0.0007, Accuracy: 9852/10000 (98.52%)
+2024-12-10 16:31:05,854 - Training Epoch 3: Average loss: 0.1208, Accuracy: 96.29%
+2024-12-10 16:31:06,848 - Test set: Average loss: 0.0006, Accuracy: 9861/10000 (98.61%)
+2024-12-10 16:31:26,552 - Training Epoch 4: Average loss: 0.1067, Accuracy: 96.75%
+2024-12-10 16:31:27,502 - Test set: Average loss: 0.0005, Accuracy: 9888/10000 (98.88%)
+2024-12-10 16:31:47,186 - Training Epoch 5: Average loss: 0.0986, Accuracy: 96.87%
+2024-12-10 16:31:48,166 - Test set: Average loss: 0.0005, Accuracy: 9902/10000 (99.02%)
+2024-12-10 16:32:05,569 - Training Epoch 6: Average loss: 0.0989, Accuracy: 96.85%
+2024-12-10 16:32:06,436 - Test set: Average loss: 0.0005, Accuracy: 9896/10000 (98.96%)
+2024-12-10 16:32:23,325 - Training Epoch 7: Average loss: 0.0897, Accuracy: 97.19%
+2024-12-10 16:32:24,192 - Test set: Average loss: 0.0005, Accuracy: 9901/10000 (99.01%)
+2024-12-10 16:32:41,112 - Training Epoch 8: Average loss: 0.0901, Accuracy: 97.17%
+2024-12-10 16:32:41,922 - Test set: Average loss: 0.0005, Accuracy: 9904/10000 (99.04%)
+2024-12-10 16:32:58,860 - Training Epoch 9: Average loss: 0.0852, Accuracy: 97.37%
+2024-12-10 16:32:59,662 - Test set: Average loss: 0.0004, Accuracy: 9907/10000 (99.07%)
+2024-12-10 16:33:16,560 - Training Epoch 10: Average loss: 0.0836, Accuracy: 97.43%
+2024-12-10 16:33:17,389 - Test set: Average loss: 0.0004, Accuracy: 9921/10000 (99.21%)
+2024-12-10 16:33:34,164 - Training Epoch 11: Average loss: 0.0814, Accuracy: 97.49%
+2024-12-10 16:33:35,000 - Test set: Average loss: 0.0004, Accuracy: 9910/10000 (99.10%)
+2024-12-10 16:33:51,877 - Training Epoch 12: Average loss: 0.0772, Accuracy: 97.55%
+2024-12-10 16:33:52,765 - Test set: Average loss: 0.0004, Accuracy: 9921/10000 (99.21%)
+2024-12-10 16:34:09,776 - Training Epoch 13: Average loss: 0.0796, Accuracy: 97.51%
+2024-12-10 16:34:10,635 - Test set: Average loss: 0.0004, Accuracy: 9914/10000 (99.14%)
+2024-12-10 16:34:27,425 - Training Epoch 14: Average loss: 0.0786, Accuracy: 97.52%
+2024-12-10 16:34:28,272 - Test set: Average loss: 0.0004, Accuracy: 9940/10000 (99.40%)
 ```
 ### Key Observations:
 1. Best accuracy of 99.40% achieved at epoch 14
