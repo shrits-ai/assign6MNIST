@@ -65,6 +65,7 @@
   - Tests BatchNorm configuration
 
 ### Results by Epoch (Formatted):
+```
 Epoch 1:  Train Acc: 88.92% | Test Acc: 97.98% | Train Loss: 0.3468 | Test Loss: 0.0010
 Epoch 2:  Train Acc: 95.50% | Test Acc: 98.52% | Train Loss: 0.1440 | Test Loss: 0.0007
 Epoch 3:  Train Acc: 96.29% | Test Acc: 98.61% | Train Loss: 0.1208 | Test Loss: 0.0006
@@ -79,7 +80,7 @@ Epoch 11: Train Acc: 97.49% | Test Acc: 99.10% | Train Loss: 0.0814 | Test Loss:
 Epoch 12: Train Acc: 97.55% | Test Acc: 99.21% | Train Loss: 0.0772 | Test Loss: 0.0004
 Epoch 13: Train Acc: 97.51% | Test Acc: 99.14% | Train Loss: 0.0796 | Test Loss: 0.0004
 Epoch 14: Train Acc: 97.52% | Test Acc: 99.40% | Train Loss: 0.0786 | Test Loss: 0.0004
-
+```
 ### Key Observations:
 1. Best accuracy of 99.40% achieved at epoch 14
 2. No significant overfitting (train-test gap remains small)
