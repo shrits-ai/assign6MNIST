@@ -1,9 +1,9 @@
-name: Train Model
+name: Model Architecture & Training
 
 on: [push]
 
 jobs:
-  train:
+  model_pipeline:
     runs-on: ubuntu-24.04
     
     steps:
@@ -17,39 +17,16 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install torch torchvision
-        pip install torchsummary
+        pip install torch torchvision torchsummary
         
-    - name: Check model architecture
-      id: architecture
-      continue-on-error: true
+    - name: Run Model Pipeline
+      id: pipeline
       run: |
+        echo "Running Model Architecture Tests..."
         python test_model.py
         
-    - name: Train model
-      id: training
-      continue-on-error: true
-      run: |
+        echo "\nStarting Model Training..."
         python train.py
-        
-    - name: Check training success
-      id: check
-      run: |
-        if [ "${{ steps.architecture.outcome }}" == "failure" ] || [ "${{ steps.training.outcome }}" == "failure" ]; then
-          echo "status=failure" >> $GITHUB_OUTPUT
-          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-               -X POST \
-               -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
-               -d '{"state":"failure","context":"ML Pipeline","description":"Training failed"}'
-        else
-          echo "status=success" >> $GITHUB_OUTPUT
-          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-               -X POST \
-               -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
-               -d '{"state":"success","context":"ML Pipeline","description":"Training successful"}'
-        fi
         
     - name: Upload training logs
       if: always()
@@ -60,7 +37,7 @@ jobs:
         retention-days: 90
         
     - name: Upload best model
-      if: steps.check.outputs.status == 'success'
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: best-model
@@ -70,7 +47,7 @@ jobs:
     - name: Update README badge
       if: always()
       run: |
-        if [ "${{ steps.check.outputs.status }}" == "success" ]; then
+        if [ $? -eq 0 ]; then
           sed -i 's/ML%20Pipeline-.*-success/ML%20Pipeline-Active-success/' README.md
         else
           sed -i 's/ML%20Pipeline-.*-success/ML%20Pipeline-Failed-red/' README.md
