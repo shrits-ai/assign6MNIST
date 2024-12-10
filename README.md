@@ -337,4 +337,30 @@ Training completed in 4.25 minutes
 2. No overfitting observed (train-test gap remains small)
 3. Consistent improvement in test accuracy
 4. Stable training with OneCycleLR scheduler
+
+### Test Cases :
+```
+Layer Dimension Tests:
+    Checks output shape of each layer
+    Verifies correct dimensionality through the network
+Output Properties Tests:
+    Verifies softmax probabilities sum to 1
+    Checks output shape for batched input
+Parameter Tests:
+    Verifies total parameter count < 20K
+    Checks BatchNorm parameters
+Training Mode Tests:
+    Verifies dropout behavior differs between train/eval modes
+    Tests forward/backward pass
+Model Training Test:
+    Tests a complete training step
+    Verifies optimizer and loss function work
+Batch Processing:
+    Tests model with batch input
+    Verifies batch dimension handling
+Architectural Constraints:
+    Checks for required layers
+    Verifies dropout rate range
+    Tests BatchNorm configuration
+This provides much more comprehensive testing of the model architecture and basic training functionality.
 ```
