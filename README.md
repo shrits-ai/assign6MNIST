@@ -1,4 +1,4 @@
-# Project Name
+# MNIST ERAV3 ASSIGNMENT 6
 
 [![ML Pipeline](https://img.shields.io/badge/ML%20Pipeline-Active-success)](https://github.com/shrits-ai/assign6MNIST/actions)
 [![Python](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue)](https://www.python.org/)
