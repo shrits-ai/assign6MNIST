@@ -9,6 +9,11 @@ import sys
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger = setup_logger()
 
+# Define constants
+EPOCHS = 20  # Moved epochs definition to top
+LEARNING_RATE = 0.05
+BATCH_SIZE = 64
+
 def train(model, device, train_loader, optimizer, epoch, criterion):
     model.train()
     running_loss = 0.0
@@ -73,10 +78,24 @@ def main():
     # Initialize model, optimizer and criterion
     logger.info("Initializing model...")
     model = Net().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', 
-                                                   factor=0.5, patience=3, 
-                                                   verbose=True)
+    
+    optimizer = optim.SGD(model.parameters(), 
+                         lr=LEARNING_RATE,
+                         momentum=0.9,
+                         weight_decay=5e-4,
+                         nesterov=True)
+    
+    # Modified learning rate scheduler with correct epochs reference
+    scheduler = optim.lr_scheduler.OneCycleLR(
+        optimizer,
+        max_lr=LEARNING_RATE,
+        epochs=EPOCHS,  # Now using the constant
+        steps_per_epoch=len(train_loader),
+        pct_start=0.3,
+        div_factor=10,
+        final_div_factor=100
+    )
+    
     criterion = nn.CrossEntropyLoss()
     
     # Log model architecture
@@ -91,21 +110,20 @@ def main():
     
     # Training loop
     logger.info("\nStarting training...")
-    epochs = 20
     best_acc = 0.0
+    target_acc = 99.40  # Define target accuracy
     patience = 5
     no_improve_count = 0
     
-    for epoch in range(1, epochs + 1):
+    for epoch in range(1, EPOCHS + 1):
         epoch_start = time.time()
-        logger.info(f"\nEpoch {epoch}/{epochs}")
+        logger.info(f"\nEpoch {epoch}/{EPOCHS}")
         
-        # Training and testing
         train_loss, train_acc = train(model, device, train_loader, optimizer, epoch, criterion)
         test_loss, test_acc = test(model, device, test_loader, criterion)
         
         # Learning rate scheduling
-        scheduler.step(test_loss)
+        scheduler.step()
         
         # Update metrics
         metrics.update(train_loss, train_acc, test_loss, test_acc)
@@ -129,7 +147,6 @@ def main():
         logger.info(f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
         logger.info(f"Train/Test Accuracy Gap: {train_acc - test_acc:.2f}%")
         
-        # Early stopping
         if test_acc > best_acc:
             best_acc = test_acc
             no_improve_count = 0
@@ -137,7 +154,13 @@ def main():
             logger.info(f"New best accuracy: {best_acc:.2f}%")
         else:
             no_improve_count += 1
+        
+        # Stop if we reach target accuracy
+        if test_acc >= target_acc:
+            logger.info(f"\nReached target accuracy of {target_acc}% at epoch {epoch}")
+            break
             
+        # Early stopping check
         if no_improve_count >= patience:
             logger.info(f"Early stopping triggered after {epoch} epochs")
             break
