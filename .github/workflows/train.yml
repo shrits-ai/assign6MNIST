@@ -4,13 +4,13 @@ on: [push]
 
 jobs:
   train:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.8'
         
@@ -36,14 +36,14 @@ jobs:
       id: check
       run: |
         if [ "${{ steps.architecture.outcome }}" == "failure" ] || [ "${{ steps.training.outcome }}" == "failure" ]; then
-          echo "::set-output name=status::failure"
+          echo "status=failure" >> $GITHUB_OUTPUT
           curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -X POST \
                -H "Accept: application/vnd.github.v3+json" \
                https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
                -d '{"state":"failure","context":"ML Pipeline","description":"Training failed"}'
         else
-          echo "::set-output name=status::success"
+          echo "status=success" >> $GITHUB_OUTPUT
           curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -X POST \
                -H "Accept: application/vnd.github.v3+json" \
@@ -53,7 +53,7 @@ jobs:
         
     - name: Upload training logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: training-logs
         path: training.log
@@ -61,7 +61,7 @@ jobs:
         
     - name: Upload best model
       if: steps.check.outputs.status == 'success'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: best-model
         path: best_model.pth
