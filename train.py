@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from utils import Net, get_data_loaders, setup_logger
+from utils import Net, get_data_loaders, setup_logger, TrainingMetrics
 import time
 import sys
 
@@ -73,7 +73,10 @@ def main():
     # Initialize model, optimizer and criterion
     logger.info("Initializing model...")
     model = Net().to(device)
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', 
+                                                   factor=0.5, patience=3, 
+                                                   verbose=True)
     criterion = nn.CrossEntropyLoss()
     
     # Log model architecture
@@ -83,28 +86,61 @@ def main():
     total_params = sum(p.numel() for p in model.parameters())
     logger.info(f"Total parameters: {total_params:,}")
     
+    # Initialize metrics tracker
+    metrics = TrainingMetrics()
+    
     # Training loop
     logger.info("\nStarting training...")
-    epochs = 10
+    epochs = 20
     best_acc = 0.0
+    patience = 5
+    no_improve_count = 0
     
     for epoch in range(1, epochs + 1):
         epoch_start = time.time()
         logger.info(f"\nEpoch {epoch}/{epochs}")
+        
+        # Training and testing
         train_loss, train_acc = train(model, device, train_loader, optimizer, epoch, criterion)
         test_loss, test_acc = test(model, device, test_loader, criterion)
-        epoch_time = time.time() - epoch_start
+        
+        # Learning rate scheduling
+        scheduler.step(test_loss)
+        
+        # Update metrics
+        metrics.update(train_loss, train_acc, test_loss, test_acc)
+        
+        # Check for overfitting
+        is_overfitting, reasons = metrics.check_overfitting(patience=patience)
+        
+        if is_overfitting:
+            logger.warning("\nPossible overfitting detected!")
+            for reason in reasons:
+                logger.warning(f"- {reason}")
+            logger.warning("Consider:\n"
+                         "1. Increasing dropout rate\n"
+                         "2. Adding data augmentation\n"
+                         "3. Reducing model complexity\n"
+                         "4. Early stopping")
         
         # Log epoch summary
-        logger.info(f"Epoch {epoch} completed in {epoch_time:.2f}s")
+        logger.info(f"Epoch {epoch} completed in {time.time() - epoch_start:.2f}s")
         logger.info(f"Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
         logger.info(f"Test Loss: {test_loss:.4f}, Test Acc: {test_acc:.2f}%")
+        logger.info(f"Train/Test Accuracy Gap: {train_acc - test_acc:.2f}%")
         
+        # Early stopping
         if test_acc > best_acc:
             best_acc = test_acc
-            # Save best model
+            no_improve_count = 0
             torch.save(model.state_dict(), 'best_model.pth')
             logger.info(f"New best accuracy: {best_acc:.2f}%")
+        else:
+            no_improve_count += 1
+            
+        if no_improve_count >= patience:
+            logger.info(f"Early stopping triggered after {epoch} epochs")
+            break
     
     total_time = time.time() - start_time
     logger.info(f"\nTraining completed in {total_time/60:.2f} minutes")

@@ -17,8 +17,7 @@ def setup_logger():
         format='%(asctime)s - %(message)s',
         handlers=[
             logging.FileHandler('training.log'),
-            logging.StreamHandler()
-        ]
+            logging.StreamHandler()]
     )
     return logging.getLogger(__name__)
 
@@ -48,20 +47,69 @@ class Net(nn.Module):
         return F.log_softmax(x, dim=1)
 
 def get_data_loaders():
-    transform = transforms.Compose([
+    # Training data transforms with augmentation
+    train_transform = transforms.Compose([
+        transforms.RandomRotation(10),
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+    
+    # Test data transforms (no augmentation needed)
+    test_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
     
     # Download and load MNIST dataset
-    train_dataset = datasets.MNIST('data', train=True, download=True, transform=transform)
-    test_dataset = datasets.MNIST('data', train=False, download=True, transform=transform)
+    train_dataset = datasets.MNIST('data', train=True, download=True, transform=train_transform)
+    test_dataset = datasets.MNIST('data', train=False, download=True, transform=test_transform)
     
-    # Create 50K subset from training data
-    train_subset = Subset(train_dataset, range(50000))
+    # Create data loaders with smaller batch size
+    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
     
-    # Create data loaders
-    train_loader = DataLoader(train_subset, batch_size=128, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False)
-    
-    return train_loader, test_loader 
+    return train_loader, test_loader
+
+class TrainingMetrics:
+    def __init__(self):
+        self.train_losses = []
+        self.train_accs = []
+        self.test_losses = []
+        self.test_accs = []
+        
+    def update(self, train_loss, train_acc, test_loss, test_acc):
+        self.train_losses.append(train_loss)
+        self.train_accs.append(train_acc)
+        self.test_losses.append(test_loss)
+        self.test_accs.append(test_acc)
+        
+    def check_overfitting(self, patience=3):
+        """
+        Check for overfitting indicators
+        Returns (is_overfitting, reasons) tuple
+        """
+        if len(self.train_losses) < patience + 1:
+            return False, []  # Return tuple with empty list
+            
+        # Check if training accuracy is much higher than test accuracy
+        acc_diff = self.train_accs[-1] - self.test_accs[-1]
+        
+        # Check if test loss is increasing while train loss is decreasing
+        recent_train_loss_trend = self.train_losses[-1] - self.train_losses[-patience]
+        recent_test_loss_trend = self.test_losses[-1] - self.test_losses[-patience]
+        
+        is_overfitting = False
+        reasons = []
+        
+        # Accuracy gap check
+        if acc_diff > 10:  # If training accuracy is 10% higher than test accuracy
+            is_overfitting = True
+            reasons.append(f"Large accuracy gap: Train acc is {acc_diff:.2f}% higher than test acc")
+            
+        # Loss trend check
+        if recent_train_loss_trend < 0 and recent_test_loss_trend > 0:
+            is_overfitting = True
+            reasons.append("Train loss decreasing while test loss increasing")
+            
+        return is_overfitting, reasons  # Always return a tuple of (bool, list)
